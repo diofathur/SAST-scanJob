@@ -1,0 +1,33 @@
+stages:
+  - test
+  - post
+
+nodejs-scan-sast:
+  stage: test
+  tags:
+    - docker
+  image: registry.gitlab.com/security-products/sast/nodejs-scan:2
+  artifacts:
+    paths:
+        - analyzername-sast.json
+  script:
+    - /analyzer run
+    - mv gl-sast-report.json analyzername-sast.json
+
+eslint-sast:
+  stage: test
+  tags:
+    - docker
+  image: registry.gitlab.com/pipeline-components/eslint:latest
+  script:
+    - eslint $( [[ -e .eslintrc ]] || echo '--no-eslintrc' ) --color .
+
+print-report:
+  stage: post
+  image: alpine:latest
+  artifacts:
+    paths:
+      - analyzername-sast.json
+  script:
+    - cat analyzername-sast.json
+
